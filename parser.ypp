@@ -65,10 +65,9 @@ void parse() {
     int notok = yyparse();
     fclose(fd);
     if (notok) {
-        printf("parsing failed\n");
+        printf("parsing of /proc/stat failed\n");
         exit(1);
     }
-    printf("parsing was successful\n");
 }
 
 cpustat getStat() {
