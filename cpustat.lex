@@ -1,22 +1,22 @@
 %option noyywrap
 
 %{
+#include <memory>
 #include <string>
+#include "yystype.h"
 #include "parser.tab.h"
-
-long long val;
-std::string str;
 
 %}
 
-identifier          [a-z_-]+
+identifier      [a-z][a-z_]+[0-9]*
 value           [0-9]+
+linefeed        \n
 
 %%
 
 [\t\ ]+         ;
-\n              ;
-{identifier}    { str = std::string{yytext}; return STRING; }
-{value}         { val = atoll(yytext); return VALUE; }
+{linefeed}      { return LINEFEED; }
+{identifier}    { yylval = std::make_unique<astNode>(std::string{yytext}); return STRING; }
+{value}         { yylval = std::make_unique<astNode>((uint64_t)atoll(yytext)); return VALUE; }
 
 %%

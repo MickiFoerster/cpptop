@@ -1,21 +1,38 @@
 %{
 #include <string>
 #include <vector>
+#include <map>
+#include <iostream>
+#include <stdint.h>
 #include <stdio.h>
+#include <unistd.h>
+#include "yystype.h"
 
 extern int yylex(void);
 extern void yyerror(char const * const s);
-
-extern long long val;
-extern std::string str;
+extern FILE* yyin;
 
 typedef struct {
-    std::string lineheader;
-    std::vector values;
-} cpustatLine
+	uint64_t user       ;
+	uint64_t nice       ;
+	uint64_t system     ;
+	uint64_t idle       ;
+	uint64_t iowait     ;
+	uint64_t irq        ;
+	uint64_t softirq    ;
+	uint64_t steal      ;
+	uint64_t guest      ;
+	uint64_t guest_nice ;
+	uint64_t total      ;
+} cpustat ;
+
+
+std::vector<uint64_t> values;
+std::map<std::string, std::vector<uint64_t> > stats;
+
 %}
 
-%token STRING VALUE
+%token STRING VALUE LINEFEED
 
 %%
 
@@ -24,10 +41,11 @@ cpustat: seq_of_lines
 seq_of_lines: seq_of_lines line {}
               | line {}
 
-seq_of_values: seq_of_values VALUE {}
-               | VALUE { printf("%lld\n", val); }
+seq_of_values: seq_of_values VALUE 
+               { values.push_back($2->val); }
+               | VALUE { values.push_back($1->val); }
 
-line : STRING seq_of_values { printf("%s\n", str.c_str()); }
+line : STRING seq_of_values LINEFEED { stats[$1->str] = values; values.clear(); }
 
 %%
 
@@ -35,8 +53,70 @@ void yyerror(char const * const s) {
     fprintf(stderr, "yyerror(): %s\n", s);
 }
 
+void parse() {
+    values.clear();
+    stats.clear();
+    FILE* fd = fopen("/proc/stat", "r");
+    if (fd==NULL) {
+        fprintf(stderr, "error opening file /proc/stat\n");
+        exit(1);
+    }
+    yyin = fd;
+    int notok = yyparse();
+    fclose(fd);
+    if (notok) {
+        printf("parsing failed\n");
+        exit(1);
+    }
+    printf("parsing was successful\n");
+}
+
+cpustat getStat() {
+    parse();
+    std::vector<uint64_t> &v = stats["cpu"];
+    int i=0;
+    auto user = v[i++];
+    auto nice = v[i++];
+    auto system = v[i++];
+    auto idle = v[i++];
+    auto iowait = v[i++];
+    auto irq = v[i++];
+    auto softirq = v[i++];
+    auto steal = v[i++];
+    auto guest = v[i++];
+    auto guest_nice = v[i++];
+    uint64_t sum = 0;
+    for (auto &e : v) {
+        sum += e;
+    }
+    return cpustat{
+        user      ,
+        nice      ,
+        system    ,
+        idle      ,
+        iowait    ,
+        irq       ,
+        softirq   ,
+        steal     ,
+        guest     ,
+        guest_nice,
+        sum
+    };
+}
+
+float getLoad(const cpustat &s1, const cpustat &s2) {
+    auto idle = s2.idle - s1.idle;
+    auto total = s2.total - s1.total;
+    auto cpuUsage = total - idle;
+    return 100. * static_cast<float>(cpuUsage) / static_cast<float>(total);
+}
+
 int main(int argc, char *argv[]) {
-    yyparse();
+    cpustat s1{getStat()};
+    sleep(1);
+    cpustat s2{getStat()};
+
+    std::cout << getLoad(s1, s2) << "%" << std::endl;
 
     return 0;
 }
