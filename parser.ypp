@@ -1,0 +1,42 @@
+%{
+#include <string>
+#include <vector>
+#include <stdio.h>
+
+extern int yylex(void);
+extern void yyerror(char const * const s);
+
+extern long long val;
+extern std::string str;
+
+typedef struct {
+    std::string lineheader;
+    std::vector values;
+} cpustatLine
+%}
+
+%token STRING VALUE
+
+%%
+
+cpustat: seq_of_lines
+
+seq_of_lines: seq_of_lines line {}
+              | line {}
+
+seq_of_values: seq_of_values VALUE {}
+               | VALUE { printf("%lld\n", val); }
+
+line : STRING seq_of_values { printf("%s\n", str.c_str()); }
+
+%%
+
+void yyerror(char const * const s) {
+    fprintf(stderr, "yyerror(): %s\n", s);
+}
+
+int main(int argc, char *argv[]) {
+    yyparse();
+
+    return 0;
+}
