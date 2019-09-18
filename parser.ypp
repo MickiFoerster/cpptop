@@ -5,6 +5,7 @@
 #include <iostream>
 #include <stdint.h>
 #include <stdio.h>
+#include <time.h>
 #include <unistd.h>
 #include "yystype.h"
 
@@ -114,13 +115,43 @@ float getLoad(const cpustat &s1, const cpustat &s2) {
     return load;
 }
 
-int main(int argc, char *argv[]) {
-    for (;;) {
+timespec timespecDiff(timespec start, timespec end) {
+	timespec temp;
+    auto nsecDelta = end.tv_nsec - start.tv_nsec;
+    auto secDelta = end.tv_sec - start.tv_sec;
+	if (nsecDelta<0) {
+		temp.tv_sec = secDelta - 1;
+		temp.tv_nsec = 1000000000 + nsecDelta;
+	} else {
+		temp.tv_sec = secDelta;
+		temp.tv_nsec = nsecDelta;
+	}
+	return temp;
+}
 
+
+int main(int argc, char *argv[]) {
+    timespec start, end;
+    for (;;) {
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
         cpustat s1{getStat()};
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+        auto first = timespecDiff(start, end);
+
         usleep(500000);
+
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
         cpustat s2{getStat()};
-        fprintf(stderr, " %06.2f%%\r", getLoad(s1, s2));
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+        auto second = timespecDiff(start, end);
+
+        if (first.tv_sec==0 && second.tv_sec==0) {
+            fprintf(stderr, " %06.2f%% (1st measurement took %ldms), (2nd measurement took %ldms)\r", 
+                getLoad(s1, s2), first.tv_nsec/1000000, second.tv_nsec/1000000);
+        } else {
+            fprintf(stderr, " %06.2f%% (1st measurement took %ld:%03ld sec:nsec), (2nd measurement took %ld:%03ld sec:nsec)\r", 
+                getLoad(s1, s2), first.tv_sec, first.tv_nsec, second.tv_sec, second.tv_nsec);
+        }
     }
 
     return 0;
