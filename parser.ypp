@@ -1,3 +1,6 @@
+%define api.prefix {yy_proc_stat}
+
+
 %{
 #include <string>
 #include <vector>
@@ -9,9 +12,6 @@
 #include <unistd.h>
 #include "yystype.h"
 
-extern int yylex(void);
-extern void yyerror(char const * const s);
-extern FILE* yyin;
 
 typedef struct {
 	uint64_t user       ;
@@ -130,7 +130,7 @@ timespec timespecDiff(timespec start, timespec end) {
 }
 
 
-int main(int argc, char *argv[]) {
+void* taskMeasureCPULoad(void* argv) {
     timespec start, end;
     for (;;) {
         clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start);
@@ -146,11 +146,11 @@ int main(int argc, char *argv[]) {
         auto second = timespecDiff(start, end);
 
         if (first.tv_sec==0 && second.tv_sec==0) {
-            fprintf(stderr, " %06.2f%% (1st measurement took %ldms), (2nd measurement took %ldms)\r", 
-                getLoad(s1, s2), first.tv_nsec/1000000, second.tv_nsec/1000000);
+            fprintf(stderr, "%ld: %06.2f%% (1st measurement took %ldms), (2nd measurement took %ldms)\r"
+              , time(nullptr), getLoad(s1, s2), first.tv_nsec/1000000, second.tv_nsec/1000000);
         } else {
-            fprintf(stderr, " %06.2f%% (1st measurement took %ld:%03ld sec:nsec), (2nd measurement took %ld:%03ld sec:nsec)\r", 
-                getLoad(s1, s2), first.tv_sec, first.tv_nsec, second.tv_sec, second.tv_nsec);
+            fprintf(stderr, "%ld: %06.2f%% (1st measurement took %ld:%03ld sec:nsec), (2nd measurement took %ld:%03ld sec:nsec)\r"
+              , time(nullptr), getLoad(s1, s2), first.tv_sec, first.tv_nsec, second.tv_sec, second.tv_nsec);
         }
     }
 

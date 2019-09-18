@@ -15,4 +15,12 @@ struct astNode {
   astNode(const std::string &s) : type{nodeType::nodeString}, str{s} {}
 };
 
-#define YYSTYPE std::shared_ptr<astNode>
+#define YY_PROC_STATSTYPE std::shared_ptr<astNode>
+#define YY_DECL     int yy_proc_statlex(void)
+#define yylval  yy_proc_statlval
+
+extern YY_DECL;
+extern void yyerror(char const * const s);
+extern FILE* yyin;
+
+void* taskMeasureCPULoad(void* argv);
