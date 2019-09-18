@@ -105,17 +105,23 @@ cpustat getStat() {
 
 float getLoad(const cpustat &s1, const cpustat &s2) {
     auto idle = s2.idle - s1.idle;
-    auto total = s2.total - s1.total;
-    auto cpuUsage = total - idle;
-    return 100. * static_cast<float>(cpuUsage) / static_cast<float>(total);
+    auto total = static_cast<float>(s2.total - s1.total);
+    auto cpuUsage = static_cast<float>(total - idle);
+    auto load = 0.0;
+    if (total!=0.0) {
+        load  = 100. * cpuUsage / total;
+    }
+    return load;
 }
 
 int main(int argc, char *argv[]) {
-    cpustat s1{getStat()};
-    sleep(1);
-    cpustat s2{getStat()};
+    for (;;) {
 
-    std::cout << getLoad(s1, s2) << "%" << std::endl;
+        cpustat s1{getStat()};
+        usleep(500000);
+        cpustat s2{getStat()};
+        fprintf(stderr, " %06.2f%%\r", getLoad(s1, s2));
+    }
 
     return 0;
 }
