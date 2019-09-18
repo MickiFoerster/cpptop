@@ -133,16 +133,16 @@ timespec timespecDiff(timespec start, timespec end) {
 int main(int argc, char *argv[]) {
     timespec start, end;
     for (;;) {
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start);
         cpustat s1{getStat()};
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &end);
         auto first = timespecDiff(start, end);
 
         usleep(500000);
 
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start);
         cpustat s2{getStat()};
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &end);
         auto second = timespecDiff(start, end);
 
         if (first.tv_sec==0 && second.tv_sec==0) {
