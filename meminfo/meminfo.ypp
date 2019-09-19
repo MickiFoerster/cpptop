@@ -1,0 +1,91 @@
+%define api.prefix {yy_proc_meminfo}
+
+%{
+#include "meminfo.h"
+#include <cstring>
+#include <errno.h>
+#include <iostream>
+#include <map>
+#include <pthread.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include <time.h>
+#include <unistd.h>
+#include <vector>
+
+std::map<std::string, uint64_t > meminfo;
+%}
+
+%token STRING VALUE UNIT LINEFEED
+
+%%
+
+meminfo: seq_of_lines
+
+seq_of_lines: seq_of_lines line {}
+              | line {}
+
+line : STRING VALUE UNIT LINEFEED { meminfo[$1->str] = $2->val; }
+     | STRING VALUE LINEFEED
+
+%%
+
+void yyerror(char const * const s) {
+    fprintf(stderr, "yyerror(): %s\n", s);
+}
+
+static void
+meminfoParse() {
+    meminfo.clear();
+    const char fn[] = "/proc/meminfo";
+    std::map<std::string, uint64_t > meminfo;
+    FILE* fd = fopen(fn, "r");
+    if (fd==NULL) {
+        fprintf(stderr, "error opening file %s\n", fn);
+        exit(1);
+    }
+    yyin = fd;
+    int notok = yyparse();
+    fclose(fd);
+    if (notok) {
+        printf("parsing of %s failed\n", fn);
+        exit(1);
+    }
+}
+
+float getMeminfo() {
+    meminfoParse();
+    if (meminfo.count("MemTotal:")>0 && meminfo.count("MemAvailable:")>0) {
+        auto total = meminfo["MemTotal:"];
+        auto avail = meminfo["MemAvailable:"];
+        auto memUsed = total - avail;
+        return memUsed * 100 / total;
+    }
+    return 0.;
+}
+
+void* taskMeasureMeminfo(void* argv) {
+    for (;;) {
+        auto memusage = getMeminfo();
+        fprintf(stderr, "mem usage: %0.2f%%\n", memusage);
+        usleep(2000000);
+    }
+
+    return 0;
+}
+
+void startMeminfo() {
+    pthread_t tid;
+    int err = pthread_create(&tid, NULL, taskMeasureMeminfo, NULL);
+    if (err) {
+        fprintf(stderr, "could not create thread: %s", strerror(errno));
+        exit(1);
+    }
+    err = pthread_detach(tid);
+    if (err) {
+        fprintf(stderr, "could not detach thread: %s", strerror(errno));
+        exit(1);
+    }
+}
