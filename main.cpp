@@ -3,7 +3,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <pthread.h>
-#include "yystype.h"
+#include "cpustat.h"
 
 int main() {
     pthread_t tid;

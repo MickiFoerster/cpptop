@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
-#include "yystype.h"
+#include "cpustat.h"
 
 
 typedef struct {

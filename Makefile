@@ -1,9 +1,9 @@
 CXX?=$$CXX
 CXXFLAGS=-Icpustat -std=c++17 -Wall -pthread
 cpptop: cpustat/cpustat.lex \
-	      cpustat/parser.ypp \
+	      cpustat/cpustat.ypp \
 				main.cpp \
 				Makefile
-	flex -o lex.yy.cpp cpustat/cpustat.lex 
-	bison --defines=parser.tab.h -v -o parser.tab.cpp cpustat/parser.ypp
-	$(CXX) $(CXXFLAGS) -o $@ lex.yy.cpp parser.tab.cpp main.cpp
+	flex -o cpustat.yy.cpp cpustat/cpustat.lex 
+	bison --defines=cpustat.tab.h -v -o cpustat.tab.cpp cpustat/cpustat.ypp
+	$(CXX) $(CXXFLAGS) -o $@ cpustat.yy.cpp cpustat.tab.cpp main.cpp

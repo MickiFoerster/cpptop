@@ -3,8 +3,8 @@
 %{
 #include <memory>
 #include <string>
-#include "yystype.h"
-#include "parser.tab.h"
+#include "cpustat.h"
+#include "cpustat.tab.h"
 
 %}
 
