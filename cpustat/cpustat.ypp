@@ -66,7 +66,7 @@ cpustatParse() {
         fprintf(stderr, "error opening file /proc/stat\n");
         exit(1);
     }
-    yyin = fd;
+    cpustatin = fd;
     int notok = yyparse();
     fclose(fd);
     if (notok) {

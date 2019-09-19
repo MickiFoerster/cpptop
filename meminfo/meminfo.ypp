@@ -46,7 +46,7 @@ meminfoParse() {
         fprintf(stderr, "error opening file %s\n", fn);
         exit(1);
     }
-    yyin = fd;
+    meminfoin = fd;
     int notok = yyparse();
     fclose(fd);
     if (notok) {
@@ -69,7 +69,7 @@ float getMeminfo() {
 void* taskMeasureMeminfo(void* argv) {
     for (;;) {
         auto memusage = getMeminfo();
-        fprintf(stderr, "mem usage: %0.2f%%\n", memusage);
+        fprintf(stderr, "%ld: mem usage: %0.2f%%\n", time(nullptr), memusage);
         usleep(2000000);
     }
 

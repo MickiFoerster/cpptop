@@ -21,5 +21,5 @@ struct astNode {
 
 extern YY_DECL;
 extern void yyerror(char const * const s);
-extern FILE* yyin;
+extern FILE* cpustatin;
 
