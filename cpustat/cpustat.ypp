@@ -2,21 +2,19 @@
 
 
 %{
-#include <string>
-#include <vector>
-#include <map>
-#include <iostream>
-#include <stdint.h>
-#include <stdio.h>
-#include <time.h>
-#include <unistd.h>
 #include "cpustat.h"
-#include <stdlib.h>
 #include <cstring>
 #include <errno.h>
-#include <stdio.h>
+#include <iostream>
+#include <map>
 #include <pthread.h>
-
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include <time.h>
+#include <unistd.h>
+#include <vector>
 
 typedef struct {
 	uint64_t user       ;
