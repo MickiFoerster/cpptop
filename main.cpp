@@ -1,18 +1,11 @@
-#include <stdlib.h>
-#include <cstring>
-#include <errno.h>
-#include <stdio.h>
 #include <pthread.h>
-#include "cpustat.h"
+
+void startCpuLoadMeasurement() ;
 
 int main() {
-    pthread_t tid;
-    int err = pthread_create(&tid, NULL, taskMeasureCPULoad, NULL);
-    if (err) {
-        fprintf(stderr, "could create thread: %s", strerror(errno));
-        exit(1);
-    }
-    pthread_join(tid, NULL);
+    startCpuLoadMeasurement();
+
+    pthread_exit(NULL);
 
     return 0;
 }

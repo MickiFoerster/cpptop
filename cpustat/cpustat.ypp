@@ -11,6 +11,11 @@
 #include <time.h>
 #include <unistd.h>
 #include "cpustat.h"
+#include <stdlib.h>
+#include <cstring>
+#include <errno.h>
+#include <stdio.h>
+#include <pthread.h>
 
 
 typedef struct {
@@ -71,9 +76,9 @@ void parse() {
     }
 }
 
-cpustat getStat() {
+cpustat getStat(const std::string &cpu) {
     parse();
-    std::vector<uint64_t> &v = stats["cpu"];
+    std::vector<uint64_t> &v = stats[cpu];
     int i=0;
     auto user = v[i++];
     auto nice = v[i++];
@@ -134,14 +139,14 @@ void* taskMeasureCPULoad(void* argv) {
     timespec start, end;
     for (;;) {
         clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start);
-        cpustat s1{getStat()};
+        cpustat s1{getStat("cpu")};
         clock_gettime(CLOCK_THREAD_CPUTIME_ID, &end);
         auto first = timespecDiff(start, end);
 
         usleep(500000);
 
         clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start);
-        cpustat s2{getStat()};
+        cpustat s2{getStat("cpu")};
         clock_gettime(CLOCK_THREAD_CPUTIME_ID, &end);
         auto second = timespecDiff(start, end);
 
@@ -155,4 +160,18 @@ void* taskMeasureCPULoad(void* argv) {
     }
 
     return 0;
+}
+
+void startCpuLoadMeasurement() {
+    pthread_t tid;
+    int err = pthread_create(&tid, NULL, taskMeasureCPULoad, NULL);
+    if (err) {
+        fprintf(stderr, "could not create thread: %s", strerror(errno));
+        exit(1);
+    }
+    err = pthread_detach(tid);
+    if (err) {
+        fprintf(stderr, "could not detach thread: %s", strerror(errno));
+        exit(1);
+    }
 }
