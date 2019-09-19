@@ -1,2 +1,6 @@
 # cpptop
-Reads /proc/stat and calculates the CPU load
+
+Reads CPU load and memory usage out of:
+
+* /proc/stat
+* /proc/meminfo
