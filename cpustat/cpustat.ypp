@@ -57,7 +57,8 @@ void yyerror(char const * const s) {
     fprintf(stderr, "yyerror(): %s\n", s);
 }
 
-void parse() {
+static void 
+cpustatParse() {
     values.clear();
     stats.clear();
     FILE* fd = fopen("/proc/stat", "r");
@@ -75,7 +76,7 @@ void parse() {
 }
 
 cpustat getStat(const std::string &cpu) {
-    parse();
+    cpustatParse();
     std::vector<uint64_t> &v = stats[cpu];
     int i=0;
     auto user = v[i++];
@@ -149,10 +150,10 @@ void* taskMeasureCPULoad(void* argv) {
         auto second = timespecDiff(start, end);
 
         if (first.tv_sec==0 && second.tv_sec==0) {
-            fprintf(stderr, "%ld: %06.2f%% (1st measurement took %ldms), (2nd measurement took %ldms)\r"
+            fprintf(stderr, "%ld: %06.2f%% (1st measurement took %ldms), (2nd measurement took %ldms)\n"
               , time(nullptr), getLoad(s1, s2), first.tv_nsec/1000000, second.tv_nsec/1000000);
         } else {
-            fprintf(stderr, "%ld: %06.2f%% (1st measurement took %ld:%03ld sec:nsec), (2nd measurement took %ld:%03ld sec:nsec)\r"
+            fprintf(stderr, "%ld: %06.2f%% (1st measurement took %ld:%03ld sec:nsec), (2nd measurement took %ld:%03ld sec:nsec)\n"
               , time(nullptr), getLoad(s1, s2), first.tv_sec, first.tv_nsec, second.tv_sec, second.tv_nsec);
         }
     }

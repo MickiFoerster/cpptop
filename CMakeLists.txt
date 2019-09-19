@@ -10,9 +10,11 @@ message(STATUS "bison: ${BISON}")
 set(CPPTOP cpptop)
 
 add_subdirectory(cpustat)
+add_subdirectory(meminfo)
 
 set (SOURCE main.cpp)
 
 add_executable (${CPPTOP} ${SOURCE})
 target_link_libraries(${CPPTOP} cpustat)
+target_link_libraries(${CPPTOP} meminfo)
 target_link_libraries (${CPPTOP} ${CMAKE_THREAD_LIBS_INIT})
